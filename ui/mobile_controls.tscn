@@ -6,30 +6,6 @@
 [ext_resource type="Texture2D" path="res://assets/VirtualJoystickPack/LargeHandleFilledGrey.png" id="5_5t8gs"]
 [ext_resource type="Texture2D" path="res://assets/VirtualJoystickPack/JoystickSplitted.png" id="7_3x7q3"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn"]
-bg_color = Color(0.2, 0.2, 0.2, 0.8)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(1, 1, 1, 0.6)
-corner_radius_top_left = 25
-corner_radius_top_right = 25
-corner_radius_bottom_right = 25
-corner_radius_bottom_left = 25
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_p"]
-bg_color = Color(0.4, 0.4, 0.4, 0.8)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(1, 1, 1, 0.9)
-corner_radius_top_left = 25
-corner_radius_top_right = 25
-corner_radius_bottom_right = 25
-corner_radius_bottom_left = 25
-
 [node name="MobileControls" type="CanvasLayer"]
 layer = 100
 script = ExtResource("1_7h3co")
@@ -43,128 +19,45 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="LeftArea" type="Control" parent="Root"]
+[node name="LeftJoystick" type="Control" parent="Root"]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -320.0
-offset_right = 320.0
+offset_left = 64.0
+offset_top = -264.0
+offset_right = 264.0
+offset_bottom = -64.0
 grow_vertical = 0
-mouse_filter = 2
+script = ExtResource("2_31q5e")
+base_texture = ExtResource("7_3x7q3")
+handle_texture = ExtResource("4_vq6qf")
+radius = 100.0
 
-[node name="DPad" type="Control" parent="Root/LeftArea"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -80.0
-offset_top = -80.0
-offset_right = 80.0
-offset_bottom = 80.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Up" type="Button" parent="Root/LeftArea/DPad"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -30.0
-offset_right = 30.0
-offset_bottom = 60.0
-grow_horizontal = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_p")
-text = "▲"
-
-[node name="Down" type="Button" parent="Root/LeftArea/DPad"]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -30.0
-offset_top = -60.0
-offset_right = 30.0
-grow_horizontal = 2
-grow_vertical = 0
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_p")
-text = "▼"
-
-[node name="Left" type="Button" parent="Root/LeftArea/DPad"]
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -30.0
-offset_right = 60.0
-offset_bottom = 30.0
-grow_vertical = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_p")
-text = "◀"
-
-[node name="Right" type="Button" parent="Root/LeftArea/DPad"]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -60.0
-offset_top = -30.0
-offset_bottom = 30.0
-grow_vertical = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_p")
-text = "▶"
-
-[node name="RightArea" type="Control" parent="Root"]
+[node name="RightButtons" type="Control" parent="Root"]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -540.0
-offset_top = -420.0
+offset_left = -300.0
+offset_top = -300.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="ActionButtons" type="Control" parent="Root/RightArea"]
+[node name="Jump" type="TextureButton" parent="Root/RightButtons"]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -440.0
-offset_top = -440.0
-grow_horizontal = 0
-grow_vertical = 0
-mouse_filter = 2
-
-[node name="Place" type="TextureButton" parent="Root/RightArea/ActionButtons"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -320.0
-offset_top = -280.0
-offset_right = -240.0
-offset_bottom = -200.0
+offset_left = -140.0
+offset_top = -140.0
+offset_right = -20.0
+offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
 texture_normal = ExtResource("5_5t8gs")
@@ -172,7 +65,37 @@ texture_pressed = ExtResource("4_vq6qf")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="Label" type="Label" parent="Root/RightArea/ActionButtons/Place"]
+[node name="Label" type="Label" parent="Root/RightButtons/Jump"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "J"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Place" type="TextureButton" parent="Root/RightButtons"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -100.0
+offset_right = -160.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+texture_normal = ExtResource("5_5t8gs")
+texture_pressed = ExtResource("4_vq6qf")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Label" type="Label" parent="Root/RightButtons/Place"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -184,17 +107,17 @@ text = "+"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Remove" type="TextureButton" parent="Root/RightArea/ActionButtons"]
+[node name="Remove" type="TextureButton" parent="Root/RightButtons"]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -220.0
-offset_top = -280.0
-offset_right = -140.0
-offset_bottom = -200.0
+offset_left = -140.0
+offset_top = -260.0
+offset_right = -40.0
+offset_bottom = -160.0
 grow_horizontal = 0
 grow_vertical = 0
 texture_normal = ExtResource("5_5t8gs")
@@ -202,7 +125,7 @@ texture_pressed = ExtResource("4_vq6qf")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="Label" type="Label" parent="Root/RightArea/ActionButtons/Remove"]
+[node name="Label" type="Label" parent="Root/RightButtons/Remove"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -213,58 +136,3 @@ theme_override_font_sizes/font_size = 40
 text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="Jump" type="TextureButton" parent="Root/RightArea/ActionButtons"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -340.0
-offset_top = -160.0
-offset_right = -220.0
-offset_bottom = -40.0
-grow_horizontal = 0
-grow_vertical = 0
-texture_normal = ExtResource("5_5t8gs")
-texture_pressed = ExtResource("4_vq6qf")
-ignore_texture_size = true
-stretch_mode = 0
-
-[node name="Label" type="Label" parent="Root/RightArea/ActionButtons/Jump"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 50
-text = "J"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="JoystickArea" type="Control" parent="Root/RightArea"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -280.0
-offset_top = -280.0
-grow_horizontal = 0
-grow_vertical = 0
-mouse_filter = 2
-
-[node name="RightJoystick" type="Control" parent="Root/RightArea/JoystickArea"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_31q5e")
-base_texture = ExtResource("7_3x7q3")
-handle_texture = ExtResource("5_5t8gs")
-radius = 80.0

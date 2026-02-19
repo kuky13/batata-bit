@@ -165,6 +165,10 @@ var _last_player_chunk := Vector2i(999999, 999999)
 var _chunks_to_load: Array[Vector2i] = []
 var _load_speed := 1 # Chunks per frame
 
+var _is_generating := false
+var _generation_task_id := -1
+var _generated_chunk_data := {}
+
 func _ready() -> void:
 	_player = get_node_or_null(player_path) as CharacterBody3D
 	_camera = get_node_or_null(camera_path) as Camera3D
@@ -490,19 +494,29 @@ func _update_chunks_around_player(immediate: bool) -> void:
 			_load_next_chunk()
 
 func _process_chunk_loading() -> void:
+	if _is_generating:
+		if WorkerThreadPool.is_task_completed(_generation_task_id):
+			WorkerThreadPool.wait_for_task_completion(_generation_task_id)
+			_apply_generated_chunk()
+			_is_generating = false
+		return
+
 	if _chunks_to_load.is_empty():
 		return
 	
-	for i in range(_load_speed):
-		if _chunks_to_load.is_empty():
-			break
-		_load_next_chunk()
-
-func _load_next_chunk() -> void:
 	var chunk_pos = _chunks_to_load.pop_front()
 	if _loaded_chunks.has(chunk_pos):
 		return
-	_generate_chunk(chunk_pos)
+		
+	_is_generating = true
+	_generation_task_id = WorkerThreadPool.add_task(_thread_generate_chunk.bind(chunk_pos))
+
+func _load_next_chunk() -> void:
+	# Deprecated, kept for immediate mode if needed, but logic moved to thread
+	var chunk_pos = _chunks_to_load.pop_front()
+	if _loaded_chunks.has(chunk_pos):
+		return
+	_generate_chunk(chunk_pos) # This will now be the thread function wrapper or original
 	_loaded_chunks[chunk_pos] = true
 
 func _unload_chunk(chunk_pos: Vector2i) -> void:
@@ -542,13 +556,14 @@ func _unload_chunk(chunk_pos: Vector2i) -> void:
 func _get_terrain_height(cx: int, cz: int) -> int:
 	return _calc_height(cx, cz, _noise, _mountain_noise) + terrain_base_y
 
-func _generate_chunk(chunk_pos: Vector2i) -> void:
-	_ensure_grid_map()
-	
+func _thread_generate_chunk(chunk_pos: Vector2i) -> void:
 	var start_x := chunk_pos.x * chunk_size
 	var start_z := chunk_pos.y * chunk_size
 	
-	var new_trees: Array[Node] = []
+	var local_cells: Dictionary = {}
+	var new_trees_data: Array = []
+	var new_grass_data: Array = []
+	
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _chunk_seed(chunk_pos)
 	
@@ -564,133 +579,141 @@ func _generate_chunk(chunk_pos: Vector2i) -> void:
 			var is_underwater := y <= terrain_water_level and terrain_water_item_id != -1
 			
 			if is_underwater:
-				# Underwater ground (sand)
 				for dy in range(maxi(terrain_fill_depth, 0)):
-					_grid_map.set_cell_item(Vector3i(cx, y - 1 - dy, cz), terrain_fill_item_id)
-				_grid_map.set_cell_item(Vector3i(cx, y, cz), biome_sand_item_id)
-				
-				# Water above
+					local_cells[Vector3i(cx, y - 1 - dy, cz)] = terrain_fill_item_id
+				local_cells[Vector3i(cx, y, cz)] = biome_sand_item_id
 				for wy in range(y + 1, terrain_water_level + 1):
-					_grid_map.set_cell_item(Vector3i(cx, wy, cz), terrain_water_item_id)
+					local_cells[Vector3i(cx, wy, cz)] = terrain_water_item_id
 			else:
-				# --- Camadas de Solo ---
-				# 1. Superfície (Grama ou Areia/Pedra dependendo do bioma)
-				_grid_map.set_cell_item(Vector3i(cx, y, cz), surface_id)
-				
-				# 2. Terra (2 camadas abaixo da superfície)
-				# IDs: 0=Grama, 1=Terra, 2=Pedra
+				local_cells[Vector3i(cx, y, cz)] = surface_id
 				var dirt_id := terrain_dirt_item_id
-				for dy in range(1, 3): # y-1 e y-2
-					_grid_map.set_cell_item(Vector3i(cx, y - dy, cz), dirt_id)
-					
-				# 3. Pedra (3 camadas abaixo da terra)
+				for dy in range(1, 3):
+					local_cells[Vector3i(cx, y - dy, cz)] = dirt_id
 				var stone_id := terrain_stone_item_id
-				for dy in range(3, 6): # y-3, y-4, y-5
-					_grid_map.set_cell_item(Vector3i(cx, y - dy, cz), stone_id)
-					
-				# Opcional: Preencher o resto com pedra até o fundo do chunk se necessário
-				# for dy in range(6, terrain_fill_depth + 6):
-				# 	_grid_map.set_cell_item(Vector3i(cx, y - dy, cz), stone_id)
+				for dy in range(3, 6):
+					local_cells[Vector3i(cx, y - dy, cz)] = stone_id
 			
 			# Trees
-			if not is_underwater and trees_generate_on_ready and not _tree_templates.is_empty() and _trees_root:
-				# Simple chance check
+			if not is_underwater and trees_generate_on_ready and not _tree_templates.is_empty():
 				if rng.randf() < trees_chance:
-					# Check if valid spot (not underwater)
 					var ok_place := true
 					if trees_place_on_grass_only:
-						var surface_item := _grid_map.get_cell_item(Vector3i(cx, y, cz))
+						var surface_item = local_cells.get(Vector3i(cx, y, cz), -1)
 						if not trees_spawn_item_ids.has(surface_item):
 							ok_place = false
 					
 					if ok_place:
-						# Seed already set above
-						
-						# Clone the template
 						var t_idx := rng.randi_range(0, _tree_templates.size() - 1)
-						var t := (_tree_templates[t_idx] as Node).duplicate()
-							
-						_trees_root.add_child(t)
-						new_trees.append(t)
-						
-						# Setup physics for new tree
-						if t is Sprite3D:
-							_apply_tree_visual_overrides(t as Sprite3D)
-							if trees_hitbox_enabled:
-								_setup_single_tree_physics(t as Sprite3D)
-						else:
-							_apply_tree_visual_overrides_recursive(t)
-							if trees_hitbox_enabled and not _node_has_collision(t):
-								var s3d := _find_first_sprite3d(t)
-								if s3d:
-									_setup_single_tree_physics(s3d)
-								else:
-									var body := StaticBody3D.new()
-									var shape := BoxShape3D.new()
-									shape.size = Vector3(0.4, 1.5, 0.4)
-									var cs := CollisionShape3D.new()
-									cs.shape = shape
-									cs.position.y = 0.75
-									body.add_child(cs)
-									t.add_child(body)
-						
-						if t is Node3D:
-							var t3d := t as Node3D
-							if not _tree_templates_exact:
-								t3d.rotation.y = rng.randf_range(0.0, TAU)
-								var sc := rng.randf_range(trees_random_scale.x, trees_random_scale.y)
-								t3d.scale = Vector3.ONE * sc
-							
-							var world_pos := _grid_map.to_global(_grid_map.map_to_local(Vector3i(cx, y, cz)))
-							var y_off := trees_y_offset
-							
-							if trees_snap_to_block_top:
-								y_off += float(_grid_map.cell_size.y) * 0.5
-								
-							if trees_auto_lift_to_ground and not _tree_templates_exact:
-								var s := _find_first_sprite3d(t)
-								if s:
-									var aabb: AABB = s.get_aabb()
-									y_off += -float(aabb.position.y) * t3d.scale.y
-							
-							y_off -= trees_sink_into_ground
-								
-							t3d.global_position = world_pos + Vector3(0.0, y_off, 0.0)
-							t3d.visible = true
+						var data = { "idx": t_idx, "pos_map": Vector3i(cx, y, cz), "rot_y": 0.0, "scale": 1.0, "exact": _tree_templates_exact }
+						if not _tree_templates_exact:
+							data["rot_y"] = rng.randf_range(0.0, TAU)
+							data["scale"] = rng.randf_range(trees_random_scale.x, trees_random_scale.y)
+						new_trees_data.append(data)
 
 			# Grass
-			if not is_underwater and grass_generate_on_ready and not _grass_templates.is_empty() and _trees_root:
+			if not is_underwater and grass_generate_on_ready and not _grass_templates.is_empty():
 				if rng.randf() < grass_chance:
 					var ok_grass := true
 					if grass_place_on_grass_only:
-						var surface_item := _grid_map.get_cell_item(Vector3i(cx, y, cz))
+						var surface_item = local_cells.get(Vector3i(cx, y, cz), -1)
 						if not grass_spawn_item_ids.has(surface_item):
 							ok_grass = false
 					if ok_grass:
 						var g_idx := rng.randi_range(0, _grass_templates.size() - 1)
-						var g := (_grass_templates[g_idx] as Node).duplicate()
-						_trees_root.add_child(g)
-						new_trees.append(g)
-						if g is Node3D:
-							var g3d := g as Node3D
-							if not _grass_templates_exact:
-								g3d.rotation.y = rng.randf_range(0.0, TAU)
-								var gsc := rng.randf_range(grass_random_scale.x, grass_random_scale.y)
-								g3d.scale = Vector3.ONE * gsc
-							var g_world_pos := _grid_map.to_global(_grid_map.map_to_local(Vector3i(cx, y, cz)))
-							var gy_off := grass_y_offset
-							if grass_snap_to_block_top:
-								gy_off += float(_grid_map.cell_size.y) * 0.5
-							if grass_auto_lift_to_ground and not _grass_templates_exact:
-								var gs := _find_first_sprite3d(g)
-								if gs:
-									var gaabb := gs.get_aabb()
-									gy_off += -float(gaabb.position.y) * g3d.scale.y
-							g3d.global_position = g_world_pos + Vector3(0.0, gy_off, 0.0)
-							g3d.visible = true
+						var data = { "idx": g_idx, "pos_map": Vector3i(cx, y, cz), "rot_y": 0.0, "scale": 1.0, "exact": _grass_templates_exact }
+						if not _grass_templates_exact:
+							data["rot_y"] = rng.randf_range(0.0, TAU)
+							data["scale"] = rng.randf_range(grass_random_scale.x, grass_random_scale.y)
+						new_grass_data.append(data)
+						
+	_generated_chunk_data = { "pos": chunk_pos, "cells": local_cells, "trees": new_trees_data, "grass": new_grass_data }
+
+func _apply_generated_chunk() -> void:
+	_ensure_grid_map()
+	var chunk_pos = _generated_chunk_data["pos"]
+	var cells = _generated_chunk_data["cells"]
+	var trees_data = _generated_chunk_data["trees"]
+	var grass_data = _generated_chunk_data["grass"]
+	
+	for cell_pos in cells:
+		_grid_map.set_cell_item(cell_pos, cells[cell_pos])
+		
+	var new_trees: Array[Node] = []
+	if _trees_root:
+		for d in trees_data:
+			var t = (_tree_templates[d["idx"]] as Node).duplicate()
+			_trees_root.add_child(t)
+			new_trees.append(t)
+			
+			if t is Sprite3D:
+				_apply_tree_visual_overrides(t as Sprite3D)
+				if trees_hitbox_enabled:
+					_setup_single_tree_physics(t as Sprite3D)
+			else:
+				_apply_tree_visual_overrides_recursive(t)
+				if trees_hitbox_enabled and not _node_has_collision(t):
+					var s3d := _find_first_sprite3d(t)
+					if s3d:
+						_setup_single_tree_physics(s3d)
+					else:
+						var body := StaticBody3D.new()
+						var shape := BoxShape3D.new()
+						shape.size = Vector3(0.4, 1.5, 0.4)
+						var cs := CollisionShape3D.new()
+						cs.shape = shape
+						cs.position.y = 0.75
+						body.add_child(cs)
+						t.add_child(body)
+			
+			if t is Node3D:
+				var t3d := t as Node3D
+				if not d["exact"]:
+					t3d.rotation.y = d["rot_y"]
+					t3d.scale = Vector3.ONE * d["scale"]
+				
+				var world_pos := _grid_map.to_global(_grid_map.map_to_local(d["pos_map"]))
+				var y_off := trees_y_offset
+				if trees_snap_to_block_top:
+					y_off += float(_grid_map.cell_size.y) * 0.5
+				
+				if trees_auto_lift_to_ground and not d["exact"]:
+					var s := _find_first_sprite3d(t)
+					if s:
+						var aabb: AABB = s.get_aabb()
+						y_off += -float(aabb.position.y) * t3d.scale.y
+				
+				y_off -= trees_sink_into_ground
+				t3d.global_position = world_pos + Vector3(0.0, y_off, 0.0)
+				t3d.visible = true
+
+	if _trees_root:
+		for d in grass_data:
+			var g = (_grass_templates[d["idx"]] as Node).duplicate()
+			_trees_root.add_child(g)
+			new_trees.append(g)
+			if g is Node3D:
+				var g3d := g as Node3D
+				if not d["exact"]:
+					g3d.rotation.y = d["rot_y"]
+					g3d.scale = Vector3.ONE * d["scale"]
+				var g_world_pos := _grid_map.to_global(_grid_map.map_to_local(d["pos_map"]))
+				var gy_off := grass_y_offset
+				if grass_snap_to_block_top:
+					gy_off += float(_grid_map.cell_size.y) * 0.5
+				if grass_auto_lift_to_ground and not d["exact"]:
+					var gs := _find_first_sprite3d(g)
+					if gs:
+						var gaabb := gs.get_aabb()
+						gy_off += -float(gaabb.position.y) * g3d.scale.y
+				g3d.global_position = g_world_pos + Vector3(0.0, gy_off, 0.0)
+				g3d.visible = true
 
 	if not new_trees.is_empty():
 		_chunk_trees[chunk_pos] = new_trees
+
+func _generate_chunk(chunk_pos: Vector2i) -> void:
+	_thread_generate_chunk(chunk_pos)
+	_apply_generated_chunk()
 
 func _setup_single_tree_physics(s: Sprite3D) -> void:
 	if s.has_node(^"CollisionBody"):
