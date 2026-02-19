@@ -34,6 +34,33 @@ base_texture = ExtResource("7_3x7q3")
 handle_texture = ExtResource("4_vq6qf")
 radius = 100.0
 
+[node name="PauseButton" type="TextureButton" parent="Root"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -100.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 100.0
+grow_horizontal = 0
+texture_normal = ExtResource("5_5t8gs")
+texture_pressed = ExtResource("4_vq6qf")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Label" type="Label" parent="Root/PauseButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "||"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="RightButtons" type="Control" parent="Root"]
 layout_mode = 1
 anchors_preset = 3

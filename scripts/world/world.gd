@@ -165,6 +165,9 @@ var _last_player_chunk := Vector2i(999999, 999999)
 var _chunks_to_load: Array[Vector2i] = []
 var _load_speed := 1 # Chunks per frame
 
+# Persistence
+var _modified_blocks: Dictionary = {} # Vector3i -> int (Item ID, -1 for removed)
+
 var _is_generating := false
 var _generation_task_id := -1
 var _generated_chunk_data := {}
@@ -216,7 +219,9 @@ func _ready() -> void:
 	_prepare_noise()
 	
 	# Seed Logic
-	if use_random_seed:
+	if Global.current_world_seed != 0:
+		world_seed = Global.current_world_seed
+	elif use_random_seed:
 		randomize()
 		world_seed = randi()
 	else:
@@ -235,6 +240,8 @@ func _ready() -> void:
 	
 	_prepare_tree_templates()
 	_prepare_grass_templates()
+	
+	_load_world_data()
 	
 	if world_generate_on_ready:
 		_update_chunks_around_player(true) # Force immediate load on start
@@ -255,6 +262,44 @@ func _process(delta: float) -> void:
 	if not _player or not _camera:
 		return
 	_update_camera(delta)
+
+func _load_world_data() -> void:
+	if SaveManager.has_save():
+		var data = SaveManager.load_game()
+		if data.has("seed"):
+			world_seed = data["seed"]
+			_noise.seed = int(world_seed)
+			_mountain_noise.seed = int(world_seed + 2)
+			_biome_noise.seed = int(world_seed + 1)
+		
+		if data.has("player_pos") and _player:
+			var pos_array = data["player_pos"]
+			_player.global_position = Vector3(pos_array[0], pos_array[1], pos_array[2])
+			
+		if data.has("modified_blocks"):
+			var mods_str = data["modified_blocks"]
+			_modified_blocks.clear()
+			for key in mods_str:
+				# Convert string key "x,y,z" back to Vector3i
+				var parts = key.split(",")
+				if parts.size() == 3:
+					var v = Vector3i(int(parts[0]), int(parts[1]), int(parts[2]))
+					_modified_blocks[v] = int(mods_str[key])
+
+func save_world() -> void:
+	var data = {}
+	data["seed"] = world_seed
+	if _player:
+		data["player_pos"] = [_player.global_position.x, _player.global_position.y, _player.global_position.z]
+	
+	# Dictionary keys must be strings for JSON
+	var mods_str = {}
+	for v in _modified_blocks:
+		var k = "%d,%d,%d" % [v.x, v.y, v.z]
+		mods_str[k] = _modified_blocks[v]
+	data["modified_blocks"] = mods_str
+	
+	SaveManager.save_game(data)
 
 func _exit_tree() -> void:
 	_cleanup_runtime_nodes()
@@ -636,7 +681,14 @@ func _apply_generated_chunk() -> void:
 	var grass_data = _generated_chunk_data["grass"]
 	
 	for cell_pos in cells:
-		_grid_map.set_cell_item(cell_pos, cells[cell_pos])
+		if _modified_blocks.has(cell_pos):
+			var mod_item = _modified_blocks[cell_pos]
+			if mod_item != -1:
+				_grid_map.set_cell_item(cell_pos, mod_item)
+			else:
+				_grid_map.set_cell_item(cell_pos, -1)
+		else:
+			_grid_map.set_cell_item(cell_pos, cells[cell_pos])
 		
 	var new_trees: Array[Node] = []
 	if _trees_root:
@@ -826,7 +878,9 @@ func _try_place_block() -> void:
 		return
 	if not allow_build_floating and not _has_attachment(cell):
 		return
-	_grid_map.set_cell_item(cell, _get_selected_item_id())
+	var item_id = _get_selected_item_id()
+	_grid_map.set_cell_item(cell, item_id)
+	_modified_blocks[cell] = item_id
 
 func _try_remove_block() -> void:
 	var hit := _get_build_hit()
@@ -852,6 +906,7 @@ func _try_remove_block() -> void:
 		return
 		
 	_grid_map.set_cell_item(cell, -1)
+	_modified_blocks[cell] = -1
 	
 	# Efeito visual ou sonoro de quebra poderia ser adicionado aqui
 	print("Quebrou bloco: ", item, " em ", cell)

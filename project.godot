@@ -11,9 +11,15 @@ config_version=5
 [application]
 
 config/name="BatataV2"
-run/main_scene="res://worlds/world.tscn"
+run/main_scene="res://ui/main_menu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Global="*res://scripts/autoload/global.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
+Language="*res://scripts/autoload/language.gd"
 
 [display]
 

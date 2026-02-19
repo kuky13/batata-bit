@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://c6s14rad35jga"]
+
+[ext_resource type="Script" uid="uid://daj2oletbjd4e" path="res://scripts/ui/create_world_menu.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://bavk1ey3x58xh" path="res://sprites_2/kenney_ui-pack/Font/Kenney Future.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://cfauvsnoe0t6" path="res://sprites_2/kenney_ui-pack/PNG/Extra/Double/input_rectangle.png" id="3_input_bg"]
+[ext_resource type="Texture2D" uid="uid://djt72hlo826x6" path="res://sprites_2/kenney_ui-pack/PNG/Green/Default/button_rectangle_flat.png" id="4_gen_n"]
+[ext_resource type="Texture2D" uid="uid://cpo15t7wj13oq" path="res://sprites_2/kenney_ui-pack/PNG/Green/Default/button_rectangle_gloss.png" id="5_gen_p"]
+[ext_resource type="Texture2D" uid="uid://b5ussfntuco1s" path="res://sprites_2/kenney_ui-pack/PNG/Red/Default/button_rectangle_flat.png" id="6_back_n"]
+[ext_resource type="Texture2D" uid="uid://chwuivrp88d4p" path="res://sprites_2/kenney_ui-pack/PNG/Red/Default/button_rectangle_gloss.png" id="7_back_p"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_input"]
+texture = ExtResource("3_input_bg")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+
+[node name="CreateWorldMenu" type="Control" unique_id=1831998777]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="." unique_id=2003399601]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.133333, 0.133333, 0.2, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1932074763]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=328622467]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1547512589]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "Criar um novo mundo"
+horizontal_alignment = 1
+
+[node name="SeedLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1613324423]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "(Deixe em branco para gerar)
+uma seed de 13 digitos"
+horizontal_alignment = 1
+
+[node name="SeedInput" type="LineEdit" parent="CenterContainer/VBoxContainer" unique_id=535836488]
+custom_minimum_size = Vector2(400, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxTexture_input")
+alignment = 1
+
+[node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer" unique_id=635136568]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="GenerateButton" type="TextureButton" parent="CenterContainer/VBoxContainer" unique_id=905489113]
+custom_minimum_size = Vector2(400, 70)
+layout_mode = 2
+texture_normal = ExtResource("4_gen_n")
+texture_pressed = ExtResource("5_gen_p")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/GenerateButton" unique_id=1384994402]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.1, 0.3, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 28
+text = "criar um mundo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="TextureButton" parent="CenterContainer/VBoxContainer" unique_id=532487304]
+custom_minimum_size = Vector2(400, 60)
+layout_mode = 2
+texture_normal = ExtResource("6_back_n")
+texture_pressed = ExtResource("7_back_p")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/BackButton" unique_id=1466089196]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.3, 0.1, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 24
+text = "voltar"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var root := $Root
 @onready var left_joystick := $Root/LeftJoystick
 @onready var right_buttons := $Root/RightButtons
+@onready var pause_button := $Root/PauseButton
 
 var world: Node
 var _btn_touch_indices := {}
@@ -57,9 +58,19 @@ func _setup_buttons() -> void:
 	var place = right_buttons.get_node("Place")
 	var remove = right_buttons.get_node("Remove")
 	
+	# Update Texts
+	if jump.has_node("Label"): jump.get_node("Label").text = Language.get_text("MOBILE_JUMP")
+	if place.has_node("Label"): place.get_node("Label").text = Language.get_text("MOBILE_PLACE")
+	if remove.has_node("Label"): remove.get_node("Label").text = Language.get_text("MOBILE_REMOVE")
+	if pause_button and pause_button.has_node("Label"): pause_button.get_node("Label").text = Language.get_text("MOBILE_PAUSE")
+	
 	_setup_touch_button(jump)
 	_setup_touch_button(place)
 	_setup_touch_button(remove)
+	
+	if pause_button:
+		_setup_touch_button(pause_button)
+		pause_button.pressed.connect(_on_pause_pressed)
 	
 	jump.button_down.connect(func(): 
 		Input.action_press(jump_action)
@@ -76,6 +87,12 @@ func _setup_buttons() -> void:
 		if world and world.has_method("request_remove"): world.request_remove()
 		_vibrate()
 	)
+
+func _on_pause_pressed() -> void:
+	_vibrate()
+	var pause_menu = load("res://ui/pause_menu.tscn").instantiate()
+	add_child(pause_menu)
+	get_tree().paused = true
 
 func _on_joystick_changed(v: Vector2) -> void:
 	_set_ax(move_left_action, move_right_action, v.x)
