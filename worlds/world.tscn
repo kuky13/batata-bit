@@ -20,7 +20,7 @@ sky = SubResource("Sky_m138w")
 tonemap_mode = 2
 fog_enabled = true
 fog_light_color = Color(0.662745, 0.670588, 0.686275, 1)
-fog_density = 0.02
+fog_density = 0.002
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_fa4vq"]
 size = Vector2(200, 200)

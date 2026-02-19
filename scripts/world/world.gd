@@ -35,7 +35,7 @@ extends Node3D
 @export var build_raycast_mask := 2
 @export var use_runtime_mesh_library := true
 @export var blocks_scene: PackedScene = preload("res://resources/prefabs/blocks.tscn")
-@export var grid_cell_size := Vector3(0.5, 0.25, 0.5)
+@export var grid_cell_size := Vector3(0.3, 0.15, 0.3)
 
 @export var default_tree_texture: Texture2D = preload("res://assets/Pixel Art Top Down/Texture/TX Plant.png")
 @export var trees_texture_override: Texture2D
@@ -59,7 +59,8 @@ extends Node3D
 @export var world_seed := 0 # Valor numérico interno processado
 # @export var world_size_cells := Vector2i(200, 200) # Removed in favor of infinite chunks
 @export var chunk_size := 16
-@export var view_distance_chunks := 6
+@export var view_distance_chunks := 8 # Aumentado para ver mais longe
+@export var unload_distance_extra := 2 # Margem para não descarregar imediatamente ao virar as costas
 @export var world_centered := true
 @export var world_force_ideal_cell_size := true
 
@@ -97,9 +98,9 @@ extends Node3D
 
 @export var trees_generate_on_ready := true
 @export var trees_chance := 0.002
-@export var trees_random_scale := Vector2(2.5, 3.5)
-@export var trees_y_offset := -0.15
-@export var trees_sink_into_ground := 0.05
+@export var trees_random_scale := Vector2(1.8, 2.5) # Reduzido para árvores menores (era 2.5, 3.5)
+@export var trees_y_offset := -0.2 # Mais baixo para garantir que grude
+@export var trees_sink_into_ground := 0.0 # Removido afundamento excessivo
 @export var trees_place_on_grass_only := true
 @export var trees_snap_to_block_top := true
 @export var trees_auto_lift_to_ground := true
@@ -163,7 +164,7 @@ var _mountain_noise: FastNoiseLite
 var _biome_noise: FastNoiseLite
 var _last_player_chunk := Vector2i(999999, 999999)
 var _chunks_to_load: Array[Vector2i] = []
-var _load_speed := 1 # Chunks per frame
+# var _load_speed := 1 # Chunks per frame (Deprecated: logic moved to thread)
 
 # Persistence
 var _modified_blocks: Dictionary = {} # Vector3i -> int (Item ID, -1 for removed)
@@ -248,7 +249,8 @@ func _ready() -> void:
 		
 	if _player:
 		# Place player on ground at (0,0) initially if falling
-		var py := _get_terrain_height(0, 0) + 2
+		# Aumentando o offset Y para garantir que não nasça dentro do chão
+		var py := _get_terrain_height(0, 0) + 5 
 		_player.global_position = Vector3(0, py * grid_cell_size.y, 0)
 
 	_setup_crosshair()
@@ -503,6 +505,7 @@ func _update_chunks_around_player(immediate: bool) -> void:
 	_last_player_chunk = current_chunk
 	
 	var needed_chunks: Dictionary = {}
+	var unload_limit_sq := (view_distance_chunks + unload_distance_extra) * (view_distance_chunks + unload_distance_extra)
 	
 	for x in range(-view_distance_chunks, view_distance_chunks + 1):
 		for z in range(-view_distance_chunks, view_distance_chunks + 1):
@@ -511,10 +514,11 @@ func _update_chunks_around_player(immediate: bool) -> void:
 				var chunk_pos := current_chunk + Vector2i(x, z)
 				needed_chunks[chunk_pos] = true
 	
-	# Unload old chunks
+	# Unload old chunks (only if far enough)
 	var to_unload: Array[Vector2i] = []
 	for chunk_pos in _loaded_chunks:
-		if not needed_chunks.has(chunk_pos):
+		var dist_sq = chunk_pos.distance_squared_to(current_chunk)
+		if dist_sq > unload_limit_sq:
 			to_unload.append(chunk_pos)
 	
 	for chunk_pos in to_unload:
@@ -732,7 +736,12 @@ func _apply_generated_chunk() -> void:
 					var s := _find_first_sprite3d(t)
 					if s:
 						var aabb: AABB = s.get_aabb()
+						# Correção do cálculo de offset: 
+						# Pega a base do sprite (aabb.position.y) e ajusta pela escala
+						# Adiciona um pequeno valor para evitar z-fighting
 						y_off += -float(aabb.position.y) * t3d.scale.y
+						# Força um pouco mais para baixo para garantir que não flutue
+						y_off -= 0.1
 				
 				y_off -= trees_sink_into_ground
 				t3d.global_position = world_pos + Vector3(0.0, y_off, 0.0)

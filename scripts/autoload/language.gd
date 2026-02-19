@@ -1,7 +1,7 @@
 extends Node
 
 # Idioma atual ("en", "pt", "es")
-var current_language: String = "en"
+var current_language: String = "pt"
 
 # Dicionário com todas as strings do jogo
 var TEXTS = {

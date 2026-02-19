@@ -5,10 +5,10 @@
 [ext_resource type="Texture2D" uid="uid://b5qnproyys2fh" path="res://sprites_2/Abacatata_sprites_0/Tiles/pedra.png" id="3_q21qb"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_jc2le"]
-size = Vector3(0.5, 0.25, 0.5)
+size = Vector3(0.3, 0.15, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_esf6y"]
-size = Vector3(0.5, 0.25, 0.5)
+size = Vector3(0.3, 0.15, 0.3)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qr0o2"]
 albedo_texture = ExtResource("2_x5y4d")

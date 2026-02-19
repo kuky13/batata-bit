@@ -30,7 +30,13 @@ func _on_generate_pressed() -> void:
 		final_seed = seed_text.hash()
 		
 	Global.current_world_seed = final_seed
-	get_tree().change_scene_to_file("res://worlds/world.tscn")
+	
+	# Load Loading Screen
+	var loading_screen = load("res://ui/loading_screen.tscn").instantiate()
+	loading_screen.target_scene_path = "res://worlds/world.tscn"
+	get_tree().root.add_child(loading_screen)
+	get_tree().current_scene.queue_free()
+	get_tree().current_scene = loading_screen
 
 func _on_back_pressed() -> void:
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
