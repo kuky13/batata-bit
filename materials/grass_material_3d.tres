@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cvcl0oodq44ya"]
+
+[ext_resource type="Shader" uid="uid://clpnkb1wcf3y8" path="res://materials/grass_block.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" uid="uid://cfkhciwxpewaj" path="res://sprites_2/Abacatata_sprites_0/Tiles/grama1.png" id="2_top"]
+[ext_resource type="Texture2D" uid="uid://63c5q3pmh0x8" path="res://sprites_2/Abacatata_sprites_0/Tiles/Terreno com lado gramado.png" id="3_side"]
+[ext_resource type="Texture2D" uid="uid://d0ubsdeq0us8q" path="res://sprites_2/Abacatata_sprites_0/Tiles/Terra_abaixo.png" id="4_bottom"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/texture_top = ExtResource("2_top")
+shader_parameter/texture_side = ExtResource("3_side")
+shader_parameter/texture_bottom = ExtResource("4_bottom")
+shader_parameter/block_size = Vector3(0.5, 0.25, 0.5)

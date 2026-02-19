@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://bjwtpvim025bj"]
+
+[ext_resource type="Material" uid="uid://cvcl0oodq44ya" path="res://materials/grass_material_3d.tres" id="1_esf6y"]
+[ext_resource type="Texture2D" uid="uid://d0ubsdeq0us8q" path="res://sprites_2/Abacatata_sprites_0/Tiles/Terra_abaixo.png" id="2_x5y4d"]
+[ext_resource type="Texture2D" uid="uid://b5qnproyys2fh" path="res://sprites_2/Abacatata_sprites_0/Tiles/pedra.png" id="3_q21qb"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_jc2le"]
+size = Vector3(0.5, 0.25, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_esf6y"]
+size = Vector3(0.5, 0.25, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qr0o2"]
+albedo_texture = ExtResource("2_x5y4d")
+uv1_scale = Vector3(3, 2, 1)
+texture_filter = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_820s6"]
+albedo_texture = ExtResource("3_q21qb")
+uv1_scale = Vector3(3, 2, 1)
+texture_filter = 2
+
+[node name="blocks" type="Node3D" unique_id=941537367]
+
+[node name="bloco_grama" type="MeshInstance3D" parent="." unique_id=1404786674]
+material_override = ExtResource("1_esf6y")
+mesh = SubResource("BoxMesh_jc2le")
+surface_material_override/0 = ExtResource("1_esf6y")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="bloco_grama" unique_id=2071615723]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="bloco_grama/StaticBody3D" unique_id=1946634959]
+visible = false
+shape = SubResource("BoxShape3D_esf6y")
+
+[node name="bloco_terra" type="MeshInstance3D" parent="." unique_id=1282845459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.8776932)
+material_override = SubResource("StandardMaterial3D_qr0o2")
+mesh = SubResource("BoxMesh_jc2le")
+surface_material_override/0 = ExtResource("1_esf6y")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="bloco_terra" unique_id=1915558494]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="bloco_terra/StaticBody3D" unique_id=130352222]
+visible = false
+shape = SubResource("BoxShape3D_esf6y")
+
+[node name="pedra" type="MeshInstance3D" parent="." unique_id=222697014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.7475052)
+material_override = SubResource("StandardMaterial3D_820s6")
+mesh = SubResource("BoxMesh_jc2le")
+surface_material_override/0 = ExtResource("1_esf6y")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="pedra" unique_id=152595174]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="pedra/StaticBody3D" unique_id=1713383032]
+visible = false
+shape = SubResource("BoxShape3D_esf6y")
