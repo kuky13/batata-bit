@@ -8,6 +8,7 @@ extends CharacterBody3D
 @export var jump_velocity := 7.0
 @export var jump_gravity_scale := 1.5
 @export var fall_gravity_scale := 2.5
+@export var max_fall_speed := 50.0
 
 # Variáveis para controle de pulo e fluidez
 var _coyote_time := 0.15
@@ -45,6 +46,10 @@ func _physics_process(delta: float) -> void:
 			gravity_mult = jump_gravity_scale
 		
 		velocity += get_gravity() * gravity_mult * delta
+		
+		# Limita a velocidade de queda para evitar atravessar o chão
+		if velocity.y < -max_fall_speed:
+			velocity.y = -max_fall_speed
 
 	# Pulo com Coyote Time e Buffer
 	if _jump_buffer_timer > 0 and _coyote_timer > 0:

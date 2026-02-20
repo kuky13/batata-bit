@@ -30,7 +30,6 @@ surface_material_override/0 = ExtResource("1_esf6y")
 [node name="StaticBody3D" type="StaticBody3D" parent="bloco_grama" unique_id=2071615723]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="bloco_grama/StaticBody3D" unique_id=1946634959]
-visible = false
 shape = SubResource("BoxShape3D_esf6y")
 
 [node name="bloco_terra" type="MeshInstance3D" parent="." unique_id=1282845459]
@@ -42,7 +41,6 @@ surface_material_override/0 = ExtResource("1_esf6y")
 [node name="StaticBody3D" type="StaticBody3D" parent="bloco_terra" unique_id=1915558494]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="bloco_terra/StaticBody3D" unique_id=130352222]
-visible = false
 shape = SubResource("BoxShape3D_esf6y")
 
 [node name="pedra" type="MeshInstance3D" parent="." unique_id=222697014]
@@ -54,5 +52,4 @@ surface_material_override/0 = ExtResource("1_esf6y")
 [node name="StaticBody3D" type="StaticBody3D" parent="pedra" unique_id=152595174]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="pedra/StaticBody3D" unique_id=1713383032]
-visible = false
 shape = SubResource("BoxShape3D_esf6y")

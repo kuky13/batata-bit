@@ -249,9 +249,18 @@ func _ready() -> void:
 		
 	if _player:
 		# Place player on ground at (0,0) initially if falling
+		# Aguarda a física processar as colisões do GridMap recém gerado
+		# Espera mais frames para garantir que o GridMap processou tudo
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		
 		# Aumentando o offset Y para garantir que não nasça dentro do chão
-		var py := _get_terrain_height(0, 0) + 5 
+		var py := _get_terrain_height(0, 0) + 20 
 		_player.global_position = Vector3(0, py * grid_cell_size.y, 0)
+		_player.velocity = Vector3.ZERO # Reseta velocidade para não acumular gravidade durante o load
 
 	_setup_crosshair()
 	_setup_mobile_controls()
@@ -260,6 +269,15 @@ func _process(delta: float) -> void:
 	if _player:
 		_update_chunks_around_player(false)
 		_process_chunk_loading()
+		
+		# Rede de segurança: Se cair no infinito, respawna no topo
+		if _player.global_position.y < (terrain_water_level - 20) * grid_cell_size.y:
+			var _chunk_pos := _get_chunk_pos(_player.global_position)
+			var cx := int(floor(_player.global_position.x / grid_cell_size.x))
+			var cz := int(floor(_player.global_position.z / grid_cell_size.z))
+			var py := _get_terrain_height(cx, cz) + 10
+			_player.global_position.y = py * grid_cell_size.y
+			_player.velocity = Vector3.ZERO
 		
 	if not _player or not _camera:
 		return
@@ -1049,7 +1067,8 @@ func _make_runtime_mesh_library() -> MeshLibrary:
 			if static_body:
 				var collision_shape = static_body.get_node_or_null("CollisionShape3D")
 				if collision_shape and collision_shape.shape:
-					ml.set_item_shapes(id_counter, [collision_shape.shape, collision_shape.transform])
+					# MeshLibrary.set_item_shapes espera um Array de Arrays: [[shape, transform], ...]
+					ml.set_item_shapes(id_counter, [[collision_shape.shape, collision_shape.transform]])
 			
 			id_counter += 1
 			

@@ -511,7 +511,8 @@ floor_constant_speed = true
 script = ExtResource("1_j1671")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="." unique_id=647716556]
-transform = Transform3D(1.4372246, -0.010543426, 0, 0.009456919, 1.6023477, 0, 0, 0, 1, 0.0013747811, 0.2709288, 0)
+transform = Transform3D(1.4372246, -0.010543426, 0, 0.009456919, 1.6023477, 0, 0, 0, 1, 0.0013747811, 0.07, 0)
+offset = Vector2(0, 12)
 billboard = 2
 shaded = true
 alpha_cut = 2
